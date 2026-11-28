@@ -30,21 +30,6 @@ model {
         otel_service 'backend'
         resource 'backend'
       }
-      alembic = component 'alembic' {
-        metadata {
-          code 'backend/app/alembic/**'
-        }
-      }
-      api = component 'api' {
-        metadata {
-          code 'backend/app/api/**'
-        }
-      }
-      core = component 'core' {
-        metadata {
-          code 'backend/app/core/**'
-        }
-      }
     }
     mailpit = infra 'mailpit' {  // compose.override.yml:71
       technology 'axllent/mailpit'
@@ -65,55 +50,10 @@ model {
         otel_service 'frontend'
         resource 'frontend'
       }
-      src = component 'src' {
-        metadata {
-          code 'frontend/src/*'
-        }
-      }
-      client = component 'client' {
-        metadata {
-          code 'frontend/src/client/**'
-        }
-      }
-      components = component 'components' {
-        metadata {
-          code 'frontend/src/components/**'
-        }
-      }
-      hooks = component 'hooks' {
-        metadata {
-          code 'frontend/src/hooks/**'
-        }
-      }
-      lib = component 'lib' {
-        metadata {
-          code 'frontend/src/lib/**'
-        }
-      }
-      routes = component 'routes' {
-        metadata {
-          code 'frontend/src/routes/**'
-        }
-      }
     }
   }
 
   backend -> db  // reads or writes? say which: -[reads]-> or -[writes]->
-  alembic -> core
-  api -> core
-  src -> client
-  src -> components
-  src -> routes
-  components -> src
-  components -> client
-  components -> hooks
-  components -> lib
-  hooks -> src
-  hooks -> client
-  routes -> src
-  routes -> client
-  routes -> components
-  routes -> hooks
 }
 
 specification {
