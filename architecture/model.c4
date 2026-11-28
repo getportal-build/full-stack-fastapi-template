@@ -1,0 +1,142 @@
+// Starter spec, read from the code and traces by portal (no AI).
+// It says what exists. Add what the code can't: domains, your names,
+// rules, and what you plan to build.
+// Conventions: https://portal.haris-d21.workers.dev/skills/portal-architecture/SKILL.md
+model {
+  system = domain 'full-stack-fastapi-template' {
+    proxy = service 'proxy' {  // compose.override.yml:3
+      technology 'traefik:v3.7'
+      metadata {
+        otel_service 'proxy'
+        resource 'proxy'
+      }
+    }
+    db = service 'db' {  // compose.override.yml:26
+      metadata {
+        otel_service 'db'
+        resource 'db'
+      }
+    }
+    adminer = service 'adminer' {  // compose.override.yml:30
+      metadata {
+        otel_service 'adminer'
+        resource 'adminer'
+      }
+    }
+    backend = service 'backend' {  // compose.override.yml:34
+      technology 'Python · FastAPI · REST'
+      metadata {
+        code 'backend/**'
+        otel_service 'backend'
+        resource 'backend'
+      }
+      alembic = component 'alembic' {
+        metadata {
+          code 'backend/app/alembic/**'
+        }
+      }
+      api = component 'api' {
+        metadata {
+          code 'backend/app/api/**'
+        }
+      }
+      core = component 'core' {
+        metadata {
+          code 'backend/app/core/**'
+        }
+      }
+    }
+    mailpit = service 'mailpit' {  // compose.override.yml:71
+      technology 'axllent/mailpit'
+      metadata {
+        otel_service 'mailpit'
+        resource 'mailpit'
+      }
+    }
+    playwright = service 'playwright' {  // compose.override.yml:77
+      technology 'TypeScript'
+      metadata {
+        code 'frontend/**'
+        otel_service 'playwright'
+        resource 'playwright'
+      }
+      src = component 'src' {
+        metadata {
+          code 'frontend/src/*'
+        }
+      }
+      client = component 'client' {
+        metadata {
+          code 'frontend/src/client/**'
+        }
+      }
+      components = component 'components' {
+        metadata {
+          code 'frontend/src/components/**'
+        }
+      }
+      hooks = component 'hooks' {
+        metadata {
+          code 'frontend/src/hooks/**'
+        }
+      }
+      lib = component 'lib' {
+        metadata {
+          code 'frontend/src/lib/**'
+        }
+      }
+      routes = component 'routes' {
+        metadata {
+          code 'frontend/src/routes/**'
+        }
+      }
+    }
+    PostgreSQL = datastore 'PostgreSQL' {  // backend/pyproject.toml:15
+      technology 'PostgreSQL'
+      metadata {
+        resource 'PostgreSQL'
+      }
+    }
+    Sentry = infra 'Sentry' {  // backend/pyproject.toml:18
+      technology 'Sentry'
+      metadata {
+        resource 'Sentry'
+      }
+    }
+  }
+
+  backend -[request]-> mailpit  // env.SMTP_HOST
+  playwright -[request]-> backend  // env.PLAYWRIGHT_BASE_URL
+  playwright -[request]-> mailpit  // env.MAILPIT_HOST
+  backend -> db  // env.DATABASE_URL
+  alembic -> core
+  api -> core
+  backend -> PostgreSQL  // reads or writes? say which: -[reads]-> or -[writes]->
+  src -> client
+  src -> components
+  src -> routes
+  components -> src
+  components -> client
+  components -> hooks
+  components -> lib
+  hooks -> src
+  hooks -> client
+  routes -> src
+  routes -> client
+  routes -> components
+  routes -> hooks
+}
+
+specification {
+  element domain
+  element service
+  element event
+  element datastore
+  element infra
+  element component
+  relationship request
+  relationship publishes
+  relationship consumes
+  relationship reads
+  relationship writes
+}
