@@ -4,26 +4,26 @@
 // Conventions: https://portal.haris-d21.workers.dev/skills/portal-architecture/SKILL.md
 model {
   system = domain 'full-stack-fastapi-template' {
-    proxy = service 'proxy' {  // compose.override.yml:3
+    proxy = service 'proxy' {  // compose.yml:3
       technology 'traefik:v3.7'
       metadata {
         otel_service 'proxy'
         resource 'proxy'
       }
     }
-    db = service 'db' {  // compose.override.yml:26
+    db = datastore 'db' {  // compose.yml:20
+      technology 'postgres:18'
       metadata {
-        otel_service 'db'
         resource 'db'
       }
     }
-    adminer = service 'adminer' {  // compose.override.yml:30
+    adminer = infra 'adminer' {  // compose.yml:34
+      technology 'adminer'
       metadata {
-        otel_service 'adminer'
         resource 'adminer'
       }
     }
-    backend = service 'backend' {  // compose.override.yml:34
+    backend = service 'backend' {  // compose.yml:49
       technology 'Python · FastAPI · REST'
       metadata {
         code 'backend/**'
@@ -46,19 +46,24 @@ model {
         }
       }
     }
-    mailpit = service 'mailpit' {  // compose.override.yml:71
+    mailpit = infra 'mailpit' {  // compose.override.yml:71
       technology 'axllent/mailpit'
       metadata {
-        otel_service 'mailpit'
         resource 'mailpit'
       }
     }
-    playwright = service 'playwright' {  // compose.override.yml:77
+    Sentry = infra 'Sentry' {  // backend/pyproject.toml:18
+      technology 'Sentry'
+      metadata {
+        resource 'Sentry'
+      }
+    }
+    frontend = service 'frontend' {  // frontend/package.json:1
       technology 'TypeScript'
       metadata {
         code 'frontend/**'
-        otel_service 'playwright'
-        resource 'playwright'
+        otel_service 'frontend'
+        resource 'frontend'
       }
       src = component 'src' {
         metadata {
@@ -91,27 +96,11 @@ model {
         }
       }
     }
-    PostgreSQL = datastore 'PostgreSQL' {  // backend/pyproject.toml:15
-      technology 'PostgreSQL'
-      metadata {
-        resource 'PostgreSQL'
-      }
-    }
-    Sentry = infra 'Sentry' {  // backend/pyproject.toml:18
-      technology 'Sentry'
-      metadata {
-        resource 'Sentry'
-      }
-    }
   }
 
-  backend -[request]-> mailpit  // env.SMTP_HOST
-  playwright -[request]-> backend  // env.PLAYWRIGHT_BASE_URL
-  playwright -[request]-> mailpit  // env.MAILPIT_HOST
-  backend -> db  // env.DATABASE_URL
+  backend -> db  // reads or writes? say which: -[reads]-> or -[writes]->
   alembic -> core
   api -> core
-  backend -> PostgreSQL  // reads or writes? say which: -[reads]-> or -[writes]->
   src -> client
   src -> components
   src -> routes
